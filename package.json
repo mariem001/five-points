@@ -1,0 +1,21 @@
+{
+  "name": "five-points",
+  "version": "1.0.0",
+  "description": "First lesson",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "\u0016fivepoints"
+  },
+  "keywords": [
+    "traning"
+  ],
+  "author": "Mariem Amami",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
+}
