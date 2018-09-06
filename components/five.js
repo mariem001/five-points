@@ -24,30 +24,108 @@ router.use(function timeLog(req, res, next) {
   console.log('Time: ', Date.now());
   next();
 });
+
+// Error handling
+const sendError = (err, res, code) => {
+  response.status = code;
+  response.message = typeof err == 'object' ? err.message : err;
+  res.status(code).json(response);
+};
+
+// Response handling
+let response = {
+  status: 200,
+  data: [],
+  message: null
+};
+
+// Get element by _id
+let getCourseByID = (id, res, cb) => {
+  let oid = {_id:ObjectID(id)};
+  connection(db=>{
+    db.collection('courses').findOne(oid).then(result=>{
+      response.data = result;
+      response.message= "OK";
+      cb(result);
+      if(res){
+        res.json(response);
+      }
+    }).catch(err=>{
+      if(res){
+        sendError(err,res,501);
+      }
+    });
+  });  
+};
+
 // define the home page route
 router.get('/', function(req, res, next) {
   connection(db=>{
     db.collection('courses').find().toArray((err,result)=>{
-        let response = {};
         response.data = result;
         response.message= 'Five points home page';
         res.json(response);
     })
   });
-
 });
 
-router.put('/update/:id', function(req, res, next) {
-  let args = {_id:ObjectID(req.params.id)};
-  
+// Show pretty course
+router.get('/course/:id/pretty', function(req, res, next) {
+  let course  = getCourseByID(req.params.id, false, course =>{
+    res.type("text/html");
+    res.send("<h2>"+course.title+"</h2><p>"+course.name+"<p>");
+  });
+});
+
+router.get('/course/:id', function(req, res, next) {
+  getCourseByID(req.params.id, res);
+});
+ 
+router.patch('/update/:id', function(req, res, next) {
+  let id = req.params.id;
+  let args = {_id:ObjectID(id)};
   connection(db=>{
-    db.courses.update(args,{"newfield":"test"},{ upsert: false });
+    db.collection('courses').updateOne(args,{$set:{name:"new field updated"}},{ upsert: false });
     res.send('Update five points training ID: '+args._id);
   });
 });
 
+// Add new course
 router.post('/new', function(req, res, next) {
-  res.send('New five points training');
+  let course = {req.body};
+  course._id = ObjectID();
+  console.log(course);
+  connection(db=>{
+    db.collection('courses').insertOne(course).then(result=>{
+      response.data = result;
+      response.message= "OK";
+      if(res){
+        res.json(response);
+      }
+    }).catch(err=>{
+      if(res){
+        sendError(err,res,501);
+      }
+    });
+  });
+});
+
+
+// Delete unwanted course
+router.delete('/delete/:id', function(req, res, next) {
+  connection(db=>{
+    db.collection('courses').deleteOne({_id:ObjectID(req.params.id)}).then(result=>{
+      response.data = result;
+      response.message= "OK";
+      if(res){
+        res.json(response);
+      }
+    }).catch(err=>{
+      if(res){
+        sendError(err,res,501);
+      }
+    });
+  });
 });
 
 // define the about route
