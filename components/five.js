@@ -72,8 +72,7 @@ router.get('/', function(req, res, next) {
 // Show pretty course
 router.get('/course/:id/pretty', function(req, res, next) {
   let course  = getCourseByID(req.params.id, false, course =>{
-    res.type("text/html");
-    res.send("<h2>"+course.title+"</h2><p>"+course.name+"<p>");
+    res.render('course', course);
   });
 });
 
@@ -91,17 +90,14 @@ router.patch('/update/:id', function(req, res, next) {
 });
 
 // Add new course
-router.post('/new', function(req, res, next) {
-  let course = {req.body};
-  course._id = ObjectID();
-  console.log(course);
+router.post('/new', function(req, res) {
+  let course = req.body;
+  
   connection(db=>{
     db.collection('courses').insertOne(course).then(result=>{
       response.data = result;
       response.message= "OK";
-      if(res){
-        res.json(response);
-      }
+      res.json(response);
     }).catch(err=>{
       if(res){
         sendError(err,res,501);
